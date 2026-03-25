@@ -1,5 +1,16 @@
 # 🛠️ GitHub Issue Automation Suite
 
+# 🛠️ 7eight-issue-engine
+> **Transform your JSON backlog into GitHub reality with one command.**
+
+7eight-issue-engine is a lightweight, TypeScript-powered automation tool designed to bridge the gap between project planning and execution. Stop creating issues manually; define your sprint in a JSON file and let the engine handle the rest.
+
+### ✨ Key Features
+* **Atomic Persistence**: Saves state after every single issue creation. No data loss.
+* **Smart Idempotency**: Automatically skips already created issues.
+* **Dev-Ready Output**: Provides instant git branch and commit message suggestions.
+* **Dry-Run Mode**: Validate your entire plan without touching GitHub APIs.
+
 Questa suite di strumenti in TypeScript è progettata per l'automazione
 del backlog di progetto. Permette la creazione programmatica di issue su
 GitHub partendo da definizioni strutturate in formato JSON, garantendo

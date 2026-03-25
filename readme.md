@@ -198,10 +198,10 @@ richieste reali alle API:
 
 ``` bash
 # Simulazione piano completo
-npm run issue:plan -- scripts/issues-plan/issues-plan.json
+npm run issue:plan -- issues-plan/issues-plan.json
 
 # Simulazione issue singola
-DRY_RUN=true npx tsx scripts/create-issue.ts "titolo" "body" "@me" "label"
+DRY_RUN=true npx tsx create-issue.ts "titolo" "body" "@me" "label"
 ```
 
 ------------------------------------------------------------------------
@@ -213,10 +213,10 @@ file JSON:
 
 ``` bash
 # Esecuzione piano completo
-npm run issue:run -- scripts/issues-plan/issues-plan.json
+npm run issue:run -- issues-plan/issues-plan.json
 
 # Esecuzione issue singola
-DRY_RUN=false npx tsx scripts/create-issue.ts "titolo" "body" "@me" "label"
+DRY_RUN=false npx tsx create-issue.ts "titolo" "body" "@me" "label"
 ```
 
 ------------------------------------------------------------------------

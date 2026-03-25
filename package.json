@@ -1,0 +1,17 @@
+{
+  "name": "7eight-issue-engine",
+  "version": "1.0.0",
+  "description": "Professional GitHub Issue Automation Engine",
+  "main": "src/bulk-issues.ts",
+  "author": "7eightDev",
+  "license": "MIT",
+  "scripts": {
+    "issue:run": "DRY_RUN=false npx tsx src/bulk-issues.ts",
+    "issue:plan": "DRY_RUN=true npx tsx src/bulk-issues.ts",
+    "issue:single": "DRY_RUN=false npx tsx src/create-issue.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,43 @@
+[
+  {
+    "issue": {
+      "title": "feat(user): Add user module domain repository and service",
+      "body": "User module including upsertUser, getUserById, and deleteUser. Synchronization with Clerk via webhooks.",
+      "assignee": "@me",
+      "labels": [
+        "infrastructure",
+        "security"
+      ]
+    },
+    "state": "created",
+    "issueNumber": "89",
+    "createdAt": "25/03/2026, 16:16:34"
+  },
+  {
+    "issue": {
+      "title": "feat(auth): Add middleware for app and admin route protection",
+      "body": "Route protection for (app)/ and (admin)/. Verification of Clerk userId and admin role.",
+      "assignee": "@me",
+      "labels": [
+        "ui-component",
+        "bug"
+      ]
+    },
+    "state": "created",
+    "issueNumber": "90",
+    "createdAt": "25/03/2026, 16:17:40"
+  },
+  {
+    "issue": {
+      "title": "test(user): Add unit tests for user module",
+      "body": "Scenarios: creation, update, and userId not found.",
+      "assignee": "none",
+      "labels": [
+        "documentation"
+      ]
+    },
+    "state": "created",
+    "issueNumber": "91",
+    "createdAt": "25/03/2026, 16:17:44"
+  }
+]

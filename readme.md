@@ -78,6 +78,7 @@ Il file di input (es. `issues-plan.json`) agisce come un piccolo database di sta
     "createdAt": null
   }
 ]
+```
 # 🛠️ 7eight-issue-engine
 > **Transform your JSON backlog into GitHub reality with one command.**
 

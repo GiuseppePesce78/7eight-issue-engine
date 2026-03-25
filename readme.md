@@ -1,4 +1,5 @@
 # 🛠️ GitHub Issue Automation Suite
+
 <p align="center">
   <img src="https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white" />
   <img src="https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white" />
@@ -6,232 +7,322 @@
   <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge" />
 </p>
 
-# 🛠️ 7eight-issue-engine
 > **Transform your JSON backlog into GitHub reality with one command.**
 
-7eight-issue-engine is a lightweight, TypeScript-powered automation tool designed to bridge the gap between project planning and execution. Stop creating issues manually; define your sprint in a JSON file and let the engine handle the rest.
+**7eight-issue-engine** is a lightweight, TypeScript-powered automation tool designed to bridge the gap between project planning and execution. Stop creating issues manually; define your sprint in a JSON file and let the engine handle the rest.
 
-### ✨ Key Features
-* **Atomic Persistence**: Saves state after every single issue creation. No data loss.
-* **Smart Idempotency**: Automatically skips already created issues.
-* **Dev-Ready Output**: Provides instant git branch and commit message suggestions.
-* **Dry-Run Mode**: Validate your entire plan without touching GitHub APIs.
+# 🚀 7eight Issue Engine
 
-Questa suite di strumenti in TypeScript è progettata per l'automazione del backlog di progetto. Permette la creazione programmatica di issue su GitHub partendo da definizioni strutturate in formato JSON, garantendo coerenza di naming e tracciabilità dello stato di avanzamento.
+## 
 
-**Project Owner:** 7eightDev  
-**Core Stack:** TypeScript, GitHub CLI (`gh`), Node.js (`fs`, `path`)
+> Professional GitHub Issue Automation Engine
 
----
+* * *
 
-## 📖 Indice
+## 📌 Overview
 
-1. [Architettura e Principi](#architettura-e-principi)
-2. [Componenti del Sistema](#componenti-del-sistema)
-3. [Specifiche del Formato JSON](#specifiche-del-formato-json)
-4. [Guida Operativa](#guida-operativa)
-5. [Gestione degli Errori e Recovery](#gestione-degli-errori-e-recovery)
-6. [Roadmap & Future Features](#-roadmap--future-features)
+## 
 
----
+**7eight Issue Engine** is a TypeScript-based CLI tool designed to automate the creation and management of GitHub issues.
 
-## 🧠 Architettura e Principi
+It allows you to:
 
-Il sistema implementa tre pattern fondamentali per il software di automazione professionale:
+-   Create issues in bulk from structured JSON files
+    
+-   Create single issues via CLI
+    
+-   Simulate execution (dry-run) without making changes
+    
+-   Track issue status directly inside the JSON file
+    
 
-- **Idempotenza:** ogni operazione può essere ripetuta senza produrre effetti collaterali (duplicati su GitHub), grazie al controllo dello stato (`state: "created"`) nel file di origine.
-- **Atomic Persistence:** lo script salva lo stato su disco immediatamente dopo ogni singola transazione riuscita con le API di GitHub, prevenendo desincronizzazioni in caso di crash.
-- **Dry Run First:** entrambi gli script supportano una modalità di simulazione integrale per validare intestazioni, percorsi file e logica prima dell'esecuzione reale.
+The goal is to streamline backlog management, enforce consistency, and speed up development workflows.
 
----
+* * *
 
-## ⚙️ Componenti del Sistema
+## ⚙️ Requirements
 
-### 1. `create-issue.ts` (The Atomic Worker)
-Gestisce la logica di creazione della singola issue.
-- **Auto-Prefixing:** rinomina la issue post-creazione aggiungendo il prefisso `ISSUE-#XX` al titolo.
-- **Dynamic Metadata:** estrae il nome del progetto dal `package.json` della root per contestualizzare i log.
-- **Commit Helper:** genera e stampa un suggerimento per il messaggio di commit basato sulla issue appena creata.
+## 
 
-### 2. `bulk-issues.ts` (The Orchestrator)
-Gestisce l'iterazione su dataset multipli.
-- **Skipping Logic:** analizza il file JSON e processa esclusivamente le entry con `state: "pending"`.
-- **IO Synchronization:** utilizza `fs.writeFileSync` in tempo reale per mantenere il JSON sincronizzato con lo stato del repository.
+-   Node.js
+    
+-   GitHub CLI (`gh`) installed and authenticated
+    
+-   TypeScript runtime via `tsx`
+    
 
----
+Install GitHub CLI:  
+👉 [https://cli.github.com/](https://cli.github.com/)
 
-## 🧾 Specifiche del Formato JSON
+Login:
 
-Il file di input (es. `issues-plan.json`) agisce come un piccolo database di stato:
-
-```json
-[
-  {
-    "issue": {
-      "title": "feat(scope): breve descrizione",
-      "body": "Corpo dettagliato della issue",
-      "assignee": "@me",
-      "labels": ["label1", "label2"]
-    },
-    "state": "pending",
-    "issueNumber": null,
-    "createdAt": null
-  }
-]
-```
-# 🛠️ 7eight-issue-engine
-> **Transform your JSON backlog into GitHub reality with one command.**
-
-7eight-issue-engine is a lightweight, TypeScript-powered automation tool designed to bridge the gap between project planning and execution. Stop creating issues manually; define your sprint in a JSON file and let the engine handle the rest.
-
-### ✨ Key Features
-* **Atomic Persistence**: Saves state after every single issue creation. No data loss.
-* **Smart Idempotency**: Automatically skips already created issues.
-* **Dev-Ready Output**: Provides instant git branch and commit message suggestions.
-* **Dry-Run Mode**: Validate your entire plan without touching GitHub APIs.
-
-Questa suite di strumenti in TypeScript è progettata per l'automazione
-del backlog di progetto. Permette la creazione programmatica di issue su
-GitHub partendo da definizioni strutturate in formato JSON, garantendo
-coerenza di naming e tracciabilità dello stato di avanzamento.
-
-**Project Owner:** 7eightDev\
-**Core Stack:** TypeScript, GitHub CLI (`gh`), Node.js (`fs`, `path`)
-
-------------------------------------------------------------------------
-
-## 📖 Indice
-
-1.  [Architettura e Principi](#architettura-e-principi)
-2.  [Componenti del Sistema](#componenti-del-sistema)
-3.  [Specifiche del Formato JSON](#specifiche-del-formato-json)
-4.  [Guida Operativa](#guida-operativa)
-5.  [Gestione degli Errori e
-    Recovery](#gestione-degli-errori-e-recovery)
-
-------------------------------------------------------------------------
-
-## 🧠 Architettura e Principi
-
-Il sistema implementa tre pattern fondamentali per il software di
-automazione professionale:
-
--   **Idempotenza:** ogni operazione può essere ripetuta senza produrre
-    effetti collaterali (duplicati su GitHub), grazie al controllo dello
-    stato (`state: "created"`) nel file di origine.
--   **Atomic Persistence:** lo script salva lo stato su disco
-    immediatamente dopo ogni singola transazione riuscita con le API di
-    GitHub, prevenendo desincronizzazioni in caso di crash.
--   **Dry Run First:** entrambi gli script supportano una modalità di
-    simulazione integrale per validare intestazioni, percorsi file e
-    logica prima dell'esecuzione reale.
-
-------------------------------------------------------------------------
-
-## ⚙️ Componenti del Sistema
-
-### 1. `create-issue.ts` (The Atomic Worker)
-
-Gestisce la logica di creazione della singola issue.
-
--   **Auto-Prefixing:** rinomina la issue post-creazione aggiungendo il
-    prefisso `ISSUE-#XX` al titolo.
--   **Dynamic Metadata:** estrae il nome del progetto dal `package.json`
-    della root per contestualizzare i log.
--   **Commit Helper:** genera e stampa un suggerimento per il messaggio
-    di commit basato sulla issue appena creata.
-
-------------------------------------------------------------------------
-
-### 2. `bulk-issues.ts` (The Orchestrator)
-
-Gestisce l'iterazione su dataset multipli.
-
--   **Skipping Logic:** analizza il file JSON e processa esclusivamente
-    le entry con `state: "pending"`.
--   **IO Synchronization:** utilizza `fs.writeFileSync` in tempo reale
-    per mantenere il JSON sincronizzato con lo stato del repository.
-
-------------------------------------------------------------------------
-
-## 🧾 Specifiche del Formato JSON
-
-Il file di input (es. `issues-plan.json`) agisce come un piccolo
-database di stato:
-
-``` json
-[
-  {
-    "issue": {
-      "title": "feat(scope): breve descrizione",
-      "body": "Corpo dettagliato della issue",
-      "assignee": "@me",
-      "labels": ["label1", "label2"]
-    },
-    "state": "pending",
-    "issueNumber": null,
-    "createdAt": null
-  }
-]
-```
-
-------------------------------------------------------------------------
-
-## 🚀 Guida Operativa
-
-### ✅ Prerequisiti
-
--   GitHub CLI autenticata:
-
-    ``` bash
     gh auth login
-    ```
+    
 
--   Node.js e `tsx` installati nel progetto
+* * *
 
-------------------------------------------------------------------------
+## 📦 Installation
 
-### 🧪 Simulazione (Dry Run)
+## 
 
-Utilizzare per verificare la correttezza dei dati senza inviare
-richieste reali alle API:
+    npm install
+    
 
-``` bash
-# Simulazione piano completo
-npm run issue:plan -- issues-plan/issues-plan.json
+* * *
 
-# Simulazione issue singola
-DRY_RUN=true npx tsx create-issue.ts "titolo" "body" "@me" "label"
-```
+## 🧠 How It Works
 
-------------------------------------------------------------------------
+## 
 
-### ⚡ Esecuzione Reale
+The system is built around two main scripts:
 
-Utilizzare per creare effettivamente le issue su GitHub e aggiornare il
-file JSON:
+### 1\. Bulk Issue Creator
 
-``` bash
-# Esecuzione piano completo
-npm run issue:run -- issues-plan/issues-plan.json
+## 
 
-# Esecuzione issue singola
-DRY_RUN=false npx tsx create-issue.ts "titolo" "body" "@me" "label"
-```
+File: `src/bulk-issues.ts`
 
-------------------------------------------------------------------------
+-   Reads a JSON file containing a list of issues
+    
+-   Automatically creates issues on GitHub
+    
+-   Updates the issue state (`created`) inside the JSON
+    
+-   Prevents duplicates
+    
 
-## 🛡️ Gestione degli Errori e Recovery
+* * *
 
-In caso di interruzione (es. errore di rete o label inesistente):
+### 2\. Single Issue Creator
 
--   **Interruzione di sicurezza:** lo script termina immediatamente
-    (`process.exit(1)`) per prevenire stati inconsistenti.
--   **Persistenza dello stato:** il file JSON mantiene lo stato
-    aggiornato in tempo reale:
-    -   `state: "created"` → issue completata
-    -   `state: "pending"` → issue non ancora processata
--   **Ripristino (Resume):** una volta risolta la causa del blocco (es.
-    creazione della label mancante), è sufficiente rilanciare il
-    comando. Il sistema eseguirà automaticamente lo **skipping** delle
-    issue già completate e riprenderà dal punto di interruzione.
+## 
+
+File: `src/create-issue.ts`
+
+-   Creates a single issue via CLI
+    
+-   Automatically applies:
+    
+    -   labels
+        
+    -   assignee
+        
+    -   naming convention (`ISSUE-<id>`)
+        
+
+* * *
+
+## 🧪 Execution Modes
+
+### 🔍 DRY RUN (Simulation)
+
+## 
+
+No issues are created. It only shows what would happen.
+
+    npm run issue:plan <file.json>
+    
+
+Or:
+
+    DRY_RUN=true npx tsx src/bulk-issues.ts <file.json>
+    
+
+* * *
+
+### 🚀 EXECUTION (Real Run)
+
+## 
+
+Actually creates issues on GitHub.
+
+    npm run issue:run <file.json>
+    
+
+* * *
+
+### 🎯 Single Issue
+
+## 
+
+    npm run issue:single -- "Title" "Description" "assignee" "label1" "label2"
+    
+
+* * *
+
+## 🗂️ JSON File Structure
+
+## 
+
+Example:
+
+    [
+      {
+        "state": "pending",
+        "issue": {
+          "title": "Setup authentication",
+          "body": "Implement Clerk authentication",
+          "assignee": "username",
+          "labels": ["auth", "backend"]
+        }
+      }
+    ]
+    
+
+* * *
+
+## 🔁 Supported States
+
+## 
+
+| State | Description |
+| --- | --- |
+| pending | Issue to be created |
+| created | Already created (skipped automatically) |
+
+* * *
+
+## 🧾 CLI Output
+
+## 
+
+During execution, the CLI displays:
+
+-   Project name (read from `package.json`)
+    
+-   Execution mode (DRY RUN / EXECUTION)
+    
+-   Issue status:
+    
+    -   `[PENDING]`
+        
+    -   `[CREATING...]`
+        
+    -   `[SKIPPED]`
+        
+
+At the end:
+
+-   Full summary
+    
+-   Number of created issues
+    
+-   Skipped items
+    
+
+* * *
+
+## 🧩 Automatic Naming
+
+## 
+
+After creation, each issue is automatically renamed to:
+
+    ISSUE-<number>: <original title>
+    
+
+* * *
+
+## 🔐 Configuration
+
+## 
+
+Make sure you:
+
+1.  Are authenticated with GitHub CLI
+    
+2.  Are inside a GitHub repository
+    
+3.  Have permissions to create issues
+    
+
+* * *
+
+## 📁 Available Scripts
+
+## 
+
+    "scripts": {
+      "issue:run": "DRY_RUN=false npx tsx src/bulk-issues.ts",
+      "issue:plan": "DRY_RUN=true npx tsx src/bulk-issues.ts",
+      "issue:single": "DRY_RUN=false npx tsx src/create-issue.ts"
+    }
+    
+
+* * *
+
+## 🧭 Recommended Workflow
+
+## 
+
+1.  Define issues in a JSON file
+    
+2.  Run simulation:
+    
+        npm run issue:plan issues.json
+        
+    
+3.  Review output
+    
+4.  Run actual creation:
+    
+        npm run issue:run issues.json
+        
+    
+
+* * *
+
+## 🛠️ Tech Stack
+
+## 
+
+-   TypeScript
+    
+-   Node.js
+    
+-   GitHub CLI
+    
+-   tsx
+    
+
+* * *
+
+## 📄 License: MIT
+
+* * *
+
+## 👨‍💻 Author: 7eightDev
+
+* * *
+
+## 💡 Philosophy
+
+## 
+
+This tool is built to:
+
+-   remove manual repetition from workflows
+    
+-   standardize backlog structure
+    
+-   bridge development and project management
+    
+
+* * *
+
+## 🚀 Future Ideas
+
+## 
+
+-   Multi-repository support
+    
+-   Bidirectional sync with GitHub
+    
+-   UI dashboard
+    
+-   Advanced issue templates
+    
+
+* * *
+
+**Build fast. Track better. Scale clean.**

@@ -8,7 +8,7 @@
   "scripts": {
   "issue:run": "DRY_RUN=false npx tsx bulk-issues.ts issues-plan/issues-plan.json",
     "issue:plan": "DRY_RUN=true npx tsx bulk-issues.ts issues-plan/issues-plan.json",
-    "issue:single": "DRY_RUN=false npx tsx create-issue.ts issues-plan/issues-plan.json"
+    "issue:single": "DRY_RUN=false npx tsx create-issue.ts"
   },
   "dependencies": {
     "tsx": "^4.0.0",

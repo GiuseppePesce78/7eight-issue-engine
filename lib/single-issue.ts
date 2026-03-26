@@ -65,7 +65,6 @@ export function renameIssue(issueNumber: string, newTitle: string): void {
       `\n⚠️  [RENAME_FAILED] Issue #${issueNumber} created but title rename failed.`
     );
     console.error(`   Details: ${e.message}`);
-    // Non blocchiamo — l'issue è stata creata
   }
 }
 

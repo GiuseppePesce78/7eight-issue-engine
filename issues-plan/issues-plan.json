@@ -1,35 +1,211 @@
 [
   {
     "issue": {
-      "title": "feat(core): setup base architecture",
-      "body": "Initial project structure and configuration. Includes:\n- Folder structure\n- ESLint/Prettier setup\n- Core dependencies",
+      "title": "feat(user): Add user module domain repository and service",
+      "body": "User module including upsertUser, getUserById, and deleteUser. Synchronization with Clerk via webhooks.",
       "assignee": "@me",
-      "labels": ["enhancement", "internal"]
+      "labels": [
+        "infrastructure",
+        "security"
+      ]
     },
-    "state": "pending",
-    "issueNumber": null,
-    "createdAt": null
+    "state": "created",
+    "issueNumber": "89",
+    "createdAt": "25/03/2026, 16:16:34"
   },
   {
     "issue": {
-      "title": "fix(api): solve hydration mismatch on auth",
-      "body": "Fixes the flickering issue during user session validation. Needs to check the local storage provider.",
+      "title": "feat(auth): Add middleware for app and admin route protection",
+      "body": "Route protection for (app)/ and (admin)/. Verification of Clerk userId and admin role.",
+      "assignee": "@me",
+      "labels": [
+        "infrastructure",
+        "security"
+      ]
+    },
+    "state": "created",
+    "issueNumber": "90",
+    "createdAt": "25/03/2026, 16:17:40"
+  },
+  {
+    "issue": {
+      "title": "test(user): Add unit tests for user module",
+      "body": "Scenarios: creation, update, and userId not found.",
       "assignee": "none",
-      "labels": ["bug", "high-priority"]
+      "labels": [
+        "test"
+      ]
     },
-    "state": "pending",
-    "issueNumber": null,
-    "createdAt": null
+    "state": "created",
+    "issueNumber": "91",
+    "createdAt": "25/03/2026, 16:17:44"
   },
   {
     "issue": {
-      "title": "docs(readme): add installation guide",
-      "body": "Complete the README with step-by-step installation and contribution guidelines.",
+      "title": "feat(group): Add Prisma models Group Membership and Debt",
+      "body": "Add Group, Membership and Debt models to prisma/schema.prisma. Add MemberRole enum (OWNER/MEMBER). Document all decisions in docs/guides/prisma-schema-decisions.md before commit.",
       "assignee": "@me",
-      "labels": ["documentation"]
+      "labels": [
+        "backend",
+        "domain"
+      ]
     },
-    "state": "pending",
-    "issueNumber": null,
-    "createdAt": null
+    "state": "created",
+    "createdAt": "26/03/2026, 11:44:37"
+  },
+  {
+    "issue": {
+      "title": "feat(group): Add group module domain repository and service",
+      "body": "Group module with createGroup, addMember, removeMember. Entities: Group and Membership with OWNER/MEMBER roles. Files: group.domain.ts, group.dto.ts, group.mapper.ts, group.repository.ts, group.schema.ts, group.service.ts, group.actions.ts, group.types.ts.",
+      "assignee": "@me",
+      "labels": [
+        "feature",
+        "backend",
+        "domain"
+      ]
+    },
+    "state": "created",
+    "createdAt": "26/03/2026, 11:44:41"
+  },
+  {
+    "issue": {
+      "title": "feat(group): Add expense splitting logic and debt tracking",
+      "body": "Methods: addExpenseToGroup, splitEqually, splitCustom, settleDebt. Typed errors for invalid amounts or missing members. Update Debt model balance after each settlement.",
+      "assignee": "@me",
+      "labels": [
+        "feature",
+        "backend"
+      ]
+    },
+    "state": "created",
+    "createdAt": "26/03/2026, 11:44:45"
+  },
+  {
+    "issue": {
+      "title": "feat(group): Add group scope-builder for filtered queries",
+      "body": "Filters by period (startDate/endDate), category, and member. Used by group.repository.ts for composable queries.",
+      "assignee": "@me",
+      "labels": [
+        "feature",
+        "backend"
+      ]
+    },
+    "state": "created",
+    "createdAt": "26/03/2026, 11:44:49"
+  },
+  {
+    "issue": {
+      "title": "test(group): Add unit tests for group module",
+      "body": "Scenarios: equal split, custom split, partial settlement, unauthorized member. Apply double mock pattern: jest.mock('../group.repository') + jest.mock('@/lib/prisma').",
+      "assignee": "@me",
+      "labels": [
+        "test"
+      ]
+    },
+    "state": "created",
+    "createdAt": "26/03/2026, 11:44:53"
+  },
+  {
+    "issue": {
+      "title": "feat(group): Add group dashboard UI",
+      "body": "app/[locale]/(app)/groups/ with _components: group-list.tsx, group-card.tsx, expense-list.tsx, debt-summary.tsx. Server Components + Client Components only for interactions. i18n for all labels.",
+      "assignee": "@me",
+      "labels": [
+        "feature",
+        "frontend",
+        "ui-component"
+      ]
+    },
+    "state": "created",
+    "createdAt": "26/03/2026, 11:44:57"
+  },
+  {
+    "issue": {
+      "title": "chore(i18n): Add group namespace to messages and request config",
+      "body": "Add messages/it/group.json and messages/en/group.json. Update i18n/request.ts with group namespace using nested object pattern — never flat spread.",
+      "assignee": "@me",
+      "labels": [
+        "chore"
+      ]
+    },
+    "state": "created",
+    "createdAt": "26/03/2026, 11:45:00"
+  },
+  {
+    "issue": {
+      "title": "feat(scripts): Improve bulk-issues script with dynamic logs and error handling",
+      "body": "Improve bulk-issues.ts and create-issue.ts with:\n- Dynamic log header reading version, author and repo URL from package.json\n- Typed and descriptive errors (GitHub CLI not found, invalid label, malformed JSON)\n- Skip failed issues and continue instead of blocking\n- Final report with created, skipped and failed counts\n- List of failed issues in the final summary\n- Automatic rollback on partial failure",
+      "assignee": "@me",
+      "labels": [
+        "feature",
+        "chore"
+      ]
+    },
+    "state": "created",
+    "createdAt": "26/03/2026, 12:38:01",
+    "issueNumber": "102"
+  },
+  {
+    "issue": {
+      "title": "feat: extract single-issue operations to lib/single-issue.ts",
+      "body": "Extract single-issue operations into dedicated module:\n- validateInput() for CLI argument validation\n- checkGitHubCLI() for CLI availability verification\n- createIssue() for GitHub CLI execution with error handling\n- parseIssueNumber() for URL parsing\n- renameIssue() for title standardization\n- Enable better testability and separation of concerns",
+      "assignee": "@me",
+      "labels": [
+        "feature",
+        "refactor"
+      ]
+    },
+    "state": "created",
+    "createdAt": "2026-03-26T17:11:09.443Z"
+  },
+  {
+    "issue": {
+      "title": "feat: add buildGitHubCommand() to lib/cmd-utils.ts",
+      "body": "Extend command utilities with GitHub CLI command builder:\n- Add buildGitHubCommand() function for safe command construction\n- Handle assignee and labels with proper escaping\n- Complement existing buildCommandArgs() for bulk operations\n- Ensure consistent command building across the codebase",
+      "assignee": "@me",
+      "labels": [
+        "feature",
+        "refactor"
+      ]
+    },
+    "state": "created",
+    "createdAt": "2026-03-26T17:11:14.047Z"
+  },
+  {
+    "issue": {
+      "title": "feat: add single-issue reporting functions to lib/report.ts",
+      "body": "Extend reporting module with single-issue display functions:\n- Add printSingleIssueHeader() for formatted project info\n- Add printSingleIssueSuccess() for success confirmation\n- Maintain consistent formatting with bulk operations\n- Support different execution modes (test/dry-run/real)",
+      "assignee": "@me",
+      "labels": [
+        "feature",
+        "refactor"
+      ]
+    },
+    "state": "created",
+    "createdAt": "2026-03-26T17:11:18.256Z"
+  },
+  {
+    "issue": {
+      "title": "refactor: modularize create-issue.ts using extracted functions",
+      "body": "Refactor create-issue.ts to use modular architecture:\n- Replace inline code with imports from lib/ modules\n- Use readPackageMeta() for metadata extraction\n- Use validateInput() and checkGitHubCLI() for validation\n- Use buildGitHubCommand() for command construction\n- Use printSingleIssueHeader/Success() for output formatting\n- Reduce file size from ~120 to ~45 lines",
+      "assignee": "@me",
+      "labels": [
+        "refactor"
+      ]
+    },
+    "state": "created",
+    "createdAt": "2026-03-26T17:11:22.665Z"
+  },
+  {
+    "issue": {
+      "title": "docs: update create-issue.md for modular architecture",
+      "body": "Update technical documentation to reflect new modular design:\n- Document module interactions and dependencies\n- Update execution flow showing lib/ usage\n- Add module dependencies section\n- Update key concepts for separation of concerns\n- Maintain consistency with bulk-issue.md structure",
+      "assignee": "@me",
+      "labels": [
+        "docs"
+      ]
+    },
+    "state": "created",
+    "createdAt": "2026-03-26T17:11:45.888Z"
   }
 ]

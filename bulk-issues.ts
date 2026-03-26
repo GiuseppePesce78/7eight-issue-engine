@@ -1,6 +1,11 @@
-import { execSync } from "child_process";
+import { execSync, spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
+import { loadBulkData, saveBulkData } from "./lib/bulk-data";
+import { readPackageMeta } from "./lib/project-meta";
+import { printHeader, printSummary } from "./lib/report";
+import { buildCommandArgs } from "./lib/cmd-utils";
+import { IssueState, Issue, BulkEntry, ProjectMeta } from "./types/types";
 
 const [filePath] = process.argv.slice(2);
 const isDryRun = process.env.DRY_RUN !== "false";
@@ -14,82 +19,147 @@ const absolutePath = path.resolve(process.cwd(), filePath);
 const fileName = path.basename(absolutePath);
 
 // --- METADATA EXTRACTION ---
-let projectName = "Unknown Project";
-try {
-  const packageJson = JSON.parse(
-    fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8")
-  );
-  projectName = packageJson.name || "Unknown Project";
-} catch (e) {
-  // Silent fallback if package.json is missing
-}
+const { name: projectName, version: projectVersion, author: projectAuthor, repository: projectRepo } =
+  readPackageMeta();
 
 const OWNER = "7eightDev";
 
-try {
-  const data = JSON.parse(fs.readFileSync(absolutePath, "utf-8"));
+function processEntryOld(entry: BulkEntry, isDryRun: boolean, absolutePath: string, fileName: string): boolean {
+  // Skip if already created
+  if (entry.state === "created") {
+    console.log(`\x1b[90m[SKIPPED]\x1b[0m ${entry.issue.title}`);
+    return false; // not processed
+  }
 
-  // --- START HEADER ---
-  console.log("\n" + "━".repeat(65));
-  console.log(`🚀 PROJECT: ${projectName.toUpperCase()}`);
-  console.log(`👤 OWNER:   ${OWNER}`);
-  console.log(`📂 SOURCE:  ${fileName}`);
-  console.log(`📍 PATH:    ${absolutePath}`);
-  console.log(
-    `🛠️  MODE:    ${isDryRun ? "🔍 DRY RUN (Simulation)" : "🚀 EXECUTION (Real)"}`
-  );
-  console.log("━".repeat(65));
+  const args = buildCommandArgs(entry.issue);
 
+  
+  const command = `npx ${args.join(" ")}`; // For now, keep string for compatibility, but TODO: use execSync with array
+
+  if (isDryRun) {
+    console.log(`\x1b[33m[PENDING]\x1b[0m ${entry.issue.title}`);
+    return false;
+  }
+
+  console.log(`\x1b[32m[CREATING...]\x1b[0m ${entry.issue.title}`);
+
+  try {
+    const result = spawnSync("npx", ["tsx", "create-issue.ts", ...args], { 
+    stdio: "inherit",
+    shell: true 
+    });
+    
+    if (result.status !== 0) {
+      throw new Error(`Il processo figlio è terminato con codice ${result.status}`);
+    }
+
+    entry.state = "created";
+    entry.createdAt = new Date().toLocaleString("it-IT");
+    return true;
+    /* execSync(command, { stdio: "inherit" });
+
+    entry.state = "created";
+    entry.createdAt = new Date().toLocaleString("it-IT");
+    return true; // processed successfully */
+  } catch (e: any) {
+    const errorMsg = e.stderr?.toString()?.trim() || e.message || "Unknown error";
+    console.error(`\x1b[31m[FAILED]\x1b[0m ${entry.issue.title}`);
+    console.error(`   ${errorMsg}`);
+
+    entry.state = "failed";
+    entry.error = errorMsg;
+    entry.failedAt = new Date().toLocaleString("it-IT");
+    throw new Error(`Execution halted. Progress saved in: ${fileName}`);
+  }
+}
+
+function processEntry(entry: BulkEntry, isDryRun: boolean, absolutePath: string, fileName: string): boolean {
+  // 1. Salta se già creato
+  if (entry.state === "created") {
+    console.log(`\x1b[90m[SKIPPED]\x1b[0m ${entry.issue.title}`);
+    return false;
+  }
+
+  // 2. Ottieni gli argomenti come ARRAY (importante per evitare errori di shell)
+  // Assicurati che buildCommandArgs in lib/cmd-utils.ts ritorni string[]
+  const args = buildCommandArgs(entry.issue);
+
+  if (isDryRun) {
+    console.log(`\x1b[33m[PENDING]\x1b[0m ${entry.issue.title}`);
+    return false;
+  }
+
+  console.log(`\x1b[32m[CREATING...]\x1b[0m ${entry.issue.title}`);
+
+  try {
+    // 3. Esecuzione sicura tramite spawnSync
+    // Passiamo gli argomenti singolarmente, evitando che la shell interpreti caratteri speciali
+    const result = spawnSync("npx", ["tsx", "create-issue.ts", ...args], { 
+      stdio: "inherit",
+      // shell: false è più sicuro per evitare l'errore delle parentesi nel body
+      shell: process.platform === 'win32' // true solo su Windows per risolvere .cmd
+    });
+    
+    if (result.status !== 0) {
+      throw new Error(`Il processo figlio è terminato con codice ${result.status}`);
+    }
+
+    // 4. Aggiornamento stato
+    entry.state = "created";
+    // Usiamo toISOString o un formato standard per evitare problemi di localizzazione
+    entry.createdAt = new Date().toISOString(); 
+    return true;
+
+  } catch (e: any) {
+    const errorMsg = e.message || "Unknown error";
+    console.error(`\x1b[31m[FAILED]\x1b[0m ${entry.issue.title}`);
+    console.error(`   ${errorMsg}`);
+
+    entry.state = "failed";
+    entry.error = errorMsg;
+    entry.failedAt = new Date().toISOString();
+    
+    // Interrompiamo l'esecuzione per non corrompere altri dati
+    throw new Error(`Execution halted. Progress saved in: ${fileName}`);
+  }
+}
+
+function processAllEntries(data: BulkEntry[], isDryRun: boolean, absolutePath: string, fileName: string): { created: number; skipped: number } {
   let createdCount = 0;
   let skippedCount = 0;
-  const totalIssues = data.length;
 
   for (const entry of data) {
-    if (entry.state === "created") {
-      console.log(`\x1b[90m[SKIPPED]\x1b[0m ${entry.issue.title}`);
-      skippedCount++;
-      continue;
-    }
-
-    const { issue } = entry;
-    const labelsStr =
-      issue.labels?.map((l: string) => `"${l}"`).join(" ") || "";
-    const command = `npx tsx scripts/create-issue.ts "${issue.title}" "${issue.body}" "${issue.assignee}" ${labelsStr}`;
-
-    if (isDryRun) {
-      console.log(`\x1b[33m[PENDING]\x1b[0m ${issue.title}`);
-    } else {
-      try {
-        console.log(`\x1b[32m[CREATING...]\x1b[0m ${issue.title}`);
-        execSync(command, { stdio: "inherit" });
-
-        entry.state = "created";
-        entry.createdAt = new Date().toLocaleString("it-IT");
+    try {
+      if (processEntry(entry, isDryRun, absolutePath, fileName)) {
         createdCount++;
-
-        fs.writeFileSync(absolutePath, JSON.stringify(data, null, 2));
-      } catch (e) {
-        console.error(`\n❌ Execution halted. Progress saved in: ${fileName}`);
-        process.exit(1);
+      } else {
+        skippedCount++;
       }
+
+      if (!isDryRun) {
+        saveBulkData(absolutePath, data);
+      }
+    } catch (e) {
+      // Re-throw to halt execution
+      throw e;
     }
   }
 
-  // --- FINAL SUMMARY ---
-  console.log("\n" + "━".repeat(65));
-  console.log(`🏁 SUMMARY FOR: ${projectName.toUpperCase()}`);
-  if (skippedCount === totalIssues) {
-    console.log(`💡 All issues in "${fileName}" have already been created.`);
-  } else if (isDryRun) {
-    console.log(
-      `📝 Simulation finished. Ready to create: ${totalIssues - skippedCount} issues.`
-    );
-  } else {
-    console.log(
-      `✅ Success! New issues: ${createdCount} | Total in file: ${totalIssues}`
-    );
-  }
-  console.log("━".repeat(65) + "\n");
+  return { created: createdCount, skipped: skippedCount };
+}
+
+
+
+
+try {
+  const data = loadBulkData(absolutePath);
+
+  const meta: ProjectMeta = { name: projectName, version: projectVersion, author: projectAuthor, repository: projectRepo };
+  printHeader(meta, fileName, absolutePath, isDryRun);
+
+  const { created, skipped } = processAllEntries(data, isDryRun, absolutePath, fileName);
+
+  printSummary(projectName, { created, skipped, total: data.length }, isDryRun);
 } catch (error: any) {
   console.error("\n❌ Critical Error:", error.message);
 }

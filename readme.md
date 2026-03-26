@@ -11,318 +11,198 @@
 
 **7eight-issue-engine** is a lightweight, TypeScript-powered automation tool designed to bridge the gap between project planning and execution. Stop creating issues manually; define your sprint in a JSON file and let the engine handle the rest.
 
-# 🚀 7eight Issue Engine
+## 🚀 Features
 
-## 
+- **Bulk Issue Creation**: Process JSON files to create multiple GitHub issues at once.
+- **Single Issue Creation**: CLI command for individual issues.
+- **Dry Run Mode**: Simulate without making changes.
+- **State Tracking**: Automatic status updates in JSON (pending, created, failed).
+- **Modular Architecture**: Clean, testable code with separated concerns.
+- **Type Safety**: Full TypeScript support with strong typing.
 
-> Professional GitHub Issue Automation Engine
+## 📁 Project Structure
 
-* * *
-
-## 📌 Overview
-
-## 
-
-**7eight Issue Engine** is a TypeScript-based CLI tool designed to automate the creation and management of GitHub issues.
-
-It allows you to:
-
--   Create issues in bulk from structured JSON files
-    
--   Create single issues via CLI
-    
--   Simulate execution (dry-run) without making changes
-    
--   Track issue status directly inside the JSON file
-    
-
-The goal is to streamline backlog management, enforce consistency, and speed up development workflows.
-
-* * *
+```
+7eight-issue-engine/
+├── bulk-issues.ts          # Main CLI entry for bulk processing
+├── create-issue.ts         # Single issue creation script
+├── lib/
+│   ├── bulk-data.ts        # JSON load/save utilities
+│   ├── cmd-utils.ts        # Command building utilities
+│   ├── project-meta.ts     # Project metadata extraction
+│   └── report.ts           # Logging and reporting functions
+├── types/
+│   └── types.ts            # TypeScript type definitions
+├── docs/
+│   ├── bulk-issue.md       # Bulk processing documentation
+│   └── create-issue.md     # Single issue documentation
+└── package.json
+```
 
 ## ⚙️ Requirements
 
-## 
+- Node.js (v16+)
+- GitHub CLI (`gh`) installed and authenticated
+- TypeScript runtime via `tsx`
 
--   Node.js
-    
--   GitHub CLI (`gh`) installed and authenticated
-    
--   TypeScript runtime via `tsx`
-    
+Install GitHub CLI:
+```bash
+# macOS
+brew install gh
 
-Install GitHub CLI:  
-👉 [https://cli.github.com/](https://cli.github.com/)
-
-Login:
-
-    gh auth login
-    
-
-* * *
+# Or download from https://cli.github.com/
+gh auth login
+```
 
 ## 📦 Installation
 
-## 
-
-    npm install
-    
-
-* * *
+```bash
+npm install
+```
 
 ## 🧠 How It Works
 
-## 
+### Architecture Overview
 
-The system is built around two main scripts:
+The tool is built with a modular architecture:
 
-### 1\. Bulk Issue Creator
+- **Data Layer** (`lib/bulk-data.ts`): Handles JSON file operations with validation.
+- **Command Layer** (`lib/cmd-utils.ts`): Safely builds CLI commands.
+- **Metadata Layer** (`lib/project-meta.ts`): Extracts project info from `package.json`.
+- **Reporting Layer** (`lib/report.ts`): Manages console output and summaries.
+- **Types** (`types/types.ts`): Shared TypeScript interfaces.
 
-## 
+### Bulk Issue Creator
 
-File: `src/bulk-issues.ts`
+**File**: `bulk-issues.ts`
 
--   Reads a JSON file containing a list of issues
-    
--   Automatically creates issues on GitHub
-    
--   Updates the issue state (`created`) inside the JSON
-    
--   Prevents duplicates
-    
+Reads a JSON file, validates entries, and creates GitHub issues while tracking progress.
 
-* * *
+### Single Issue Creator
 
-### 2\. Single Issue Creator
+**File**: `create-issue.ts`
 
-## 
-
-File: `src/create-issue.ts`
-
--   Creates a single issue via CLI
-    
--   Automatically applies:
-    
-    -   labels
-        
-    -   assignee
-        
-    -   naming convention (`ISSUE-<id>`)
-        
-
-* * *
+Creates individual issues via CLI with labels, assignee, and automatic naming.
 
 ## 🧪 Execution Modes
 
 ### 🔍 DRY RUN (Simulation)
 
-## 
+No issues are created. Shows what would happen.
 
-No issues are created. It only shows what would happen.
-
-    npm run issue:plan <file.json>
-    
-
-Or:
-
-    DRY_RUN=true npx tsx src/bulk-issues.ts <file.json>
-    
-
-* * *
+```bash
+npm run issue:plan <file.json>
+# or
+DRY_RUN=true npx tsx bulk-issues.ts <file.json>
+```
 
 ### 🚀 EXECUTION (Real Run)
 
-## 
-
 Actually creates issues on GitHub.
 
-    npm run issue:run <file.json>
-    
-
-* * *
+```bash
+npm run issue:run <file.json>
+# or
+DRY_RUN=false npx tsx bulk-issues.ts <file.json>
+```
 
 ### 🎯 Single Issue
 
-## 
-
-    npm run issue:single -- "Title" "Description" "assignee" "label1" "label2"
-    
-
-* * *
+```bash
+npm run issue:single -- "Title" "Description" "assignee" "label1" "label2"
+```
 
 ## 🗂️ JSON File Structure
 
-## 
+Example `issues.json`:
 
-Example:
-
-    [
-      {
-        "state": "pending",
-        "issue": {
-          "title": "Setup authentication",
-          "body": "Implement Clerk authentication",
-          "assignee": "username",
-          "labels": ["auth", "backend"]
-        }
-      }
-    ]
-    
-
-* * *
+```json
+[
+  {
+    "state": "pending",
+    "issue": {
+      "title": "Setup authentication",
+      "body": "Implement Clerk authentication",
+      "assignee": "username",
+      "labels": ["auth", "backend"]
+    }
+  }
+]
+```
 
 ## 🔁 Supported States
 
-## 
-
-| State | Description |
-| --- | --- |
-| pending | Issue to be created |
-| created | Already created (skipped automatically) |
-
-* * *
+| State    | Description |
+|----------|-------------|
+| pending  | Issue to be created |
+| created  | Successfully created |
+| failed   | Creation failed (with error details) |
+| test     | Test mode entry |
 
 ## 🧾 CLI Output
 
-## 
+During execution:
 
-During execution, the CLI displays:
-
--   Project name (read from `package.json`)
-    
--   Execution mode (DRY RUN / EXECUTION)
-    
--   Issue status:
-    
-    -   `[PENDING]`
-        
-    -   `[CREATING...]`
-        
-    -   `[SKIPPED]`
-        
-
-At the end:
-
--   Full summary
-    
--   Number of created issues
-    
--   Skipped items
-    
-
-* * *
+- Project metadata header
+- Progress indicators: `[PENDING]`, `[CREATING...]`, `[SKIPPED]`, `[FAILED]`
+- Final summary with counts
 
 ## 🧩 Automatic Naming
 
-## 
-
-After creation, each issue is automatically renamed to:
-
-    ISSUE-<number>: <original title>
-    
-
-* * *
+Created issues are renamed to: `ISSUE-<number>: <original title>`
 
 ## 🔐 Configuration
 
-## 
+Ensure:
 
-Make sure you:
-
-1.  Are authenticated with GitHub CLI
-    
-2.  Are inside a GitHub repository
-    
-3.  Have permissions to create issues
-    
-
-* * *
+1. GitHub CLI is authenticated: `gh auth status`
+2. You're in a GitHub repository
+3. You have issue creation permissions
 
 ## 📁 Available Scripts
 
-## 
-
-    "scripts": {
-      "issue:run": "DRY_RUN=false npx tsx src/bulk-issues.ts",
-      "issue:plan": "DRY_RUN=true npx tsx src/bulk-issues.ts",
-      "issue:single": "DRY_RUN=false npx tsx src/create-issue.ts"
-    }
-    
-
-* * *
+```json
+{
+  "scripts": {
+    "issue:run": "DRY_RUN=false npx tsx bulk-issues.ts",
+    "issue:plan": "DRY_RUN=true npx tsx bulk-issues.ts",
+    "issue:single": "DRY_RUN=false npx tsx create-issue.ts"
+  }
+}
+```
 
 ## 🧭 Recommended Workflow
 
-## 
-
-1.  Define issues in a JSON file
-    
-2.  Run simulation:
-    
-        npm run issue:plan issues.json
-        
-    
-3.  Review output
-    
-4.  Run actual creation:
-    
-        npm run issue:run issues.json
-        
-    
-
-* * *
+1. Define issues in JSON
+2. Dry run: `npm run issue:plan issues.json`
+3. Review output
+4. Execute: `npm run issue:run issues.json`
 
 ## 🛠️ Tech Stack
 
-## 
+- **TypeScript**: Type safety and modern JS
+- **Node.js**: Runtime
+- **GitHub CLI**: Issue creation
+- **Modular Design**: Separated concerns for maintainability
 
--   TypeScript
-    
--   Node.js
-    
--   GitHub CLI
-    
--   tsx
-    
+## 📄 License
 
-* * *
+MIT
 
-## 📄 License: MIT
+## 👨‍💻 Author
 
-* * *
-
-## 👨‍💻 Author: 7eightDev
-
-* * *
+7eightDev
 
 ## 💡 Philosophy
 
-## 
-
-This tool is built to:
-
--   remove manual repetition from workflows
-    
--   standardize backlog structure
-    
--   bridge development and project management
-    
-
-* * *
+Built to remove manual repetition, standardize backlogs, and bridge planning to execution.
 
 ## 🚀 Future Ideas
 
-## 
-
--   Multi-repository support
-    
--   Bidirectional sync with GitHub
-    
--   UI dashboard
-    
--   Advanced issue templates
-    
-
-* * *
+- Multi-repository support
+- Bidirectional GitHub sync
+- Web UI dashboard
+- Advanced templates
+- CI/CD integration
 
 **Build fast. Track better. Scale clean.**

@@ -1,13 +1,17 @@
-import { execSync, spawnSync } from "child_process";
-import fs from "fs";
+import { spawnSync } from "child_process";
 import path from "path";
-import { loadBulkData, saveBulkData } from "./lib/bulk-data";
+import { extractUniqueLabels, loadBulkData, saveBulkData } from "./lib/bulk-data";
 import { readPackageMeta } from "./lib/project-meta";
 import { printHeader, printSummary } from "./lib/report";
 import { buildCommandArgs } from "./lib/cmd-utils";
-import { IssueState, Issue, BulkEntry, ProjectMeta } from "./types/types";
+import { BulkEntry, ProjectMeta } from "./types/types";
+import { verifyLabelsOnGitHub } from "./lib/single-issue";
 
+
+/* get json Path */
 const [filePath] = process.argv.slice(2);
+
+/* check dry run */
 const isDryRun = process.env.DRY_RUN !== "false";
 
 if (!filePath) {
@@ -18,60 +22,6 @@ if (!filePath) {
 const absolutePath = path.resolve(process.cwd(), filePath);
 const fileName = path.basename(absolutePath);
 
-// --- METADATA EXTRACTION ---
-const { name: projectName, version: projectVersion, author: projectAuthor, repository: projectRepo } =
-  readPackageMeta();
-
-const OWNER = "7eightDev";
-
-function processEntryOld(entry: BulkEntry, isDryRun: boolean, absolutePath: string, fileName: string): boolean {
-  // Skip if already created
-  if (entry.state === "created") {
-    console.log(`\x1b[90m[SKIPPED]\x1b[0m ${entry.issue.title}`);
-    return false; // not processed
-  }
-
-  const args = buildCommandArgs(entry.issue);
-
-  
-  const command = `npx ${args.join(" ")}`; // For now, keep string for compatibility, but TODO: use execSync with array
-
-  if (isDryRun) {
-    console.log(`\x1b[33m[PENDING]\x1b[0m ${entry.issue.title}`);
-    return false;
-  }
-
-  console.log(`\x1b[32m[CREATING...]\x1b[0m ${entry.issue.title}`);
-
-  try {
-    const result = spawnSync("npx", ["tsx", "create-issue.ts", ...args], { 
-    stdio: "inherit",
-    shell: true 
-    });
-    
-    if (result.status !== 0) {
-      throw new Error(`Il processo figlio è terminato con codice ${result.status}`);
-    }
-
-    entry.state = "created";
-    entry.createdAt = new Date().toLocaleString("it-IT");
-    return true;
-    /* execSync(command, { stdio: "inherit" });
-
-    entry.state = "created";
-    entry.createdAt = new Date().toLocaleString("it-IT");
-    return true; // processed successfully */
-  } catch (e: any) {
-    const errorMsg = e.stderr?.toString()?.trim() || e.message || "Unknown error";
-    console.error(`\x1b[31m[FAILED]\x1b[0m ${entry.issue.title}`);
-    console.error(`   ${errorMsg}`);
-
-    entry.state = "failed";
-    entry.error = errorMsg;
-    entry.failedAt = new Date().toLocaleString("it-IT");
-    throw new Error(`Execution halted. Progress saved in: ${fileName}`);
-  }
-}
 
 function processEntry(entry: BulkEntry, isDryRun: boolean, absolutePath: string, fileName: string): boolean {
   // 1. Salta se già creato
@@ -148,12 +98,24 @@ function processAllEntries(data: BulkEntry[], isDryRun: boolean, absolutePath: s
   return { created: createdCount, skipped: skippedCount };
 }
 
-
-
-
 try {
+
+  /* load data to create issues */
   const data = loadBulkData(absolutePath);
 
+  if (!isDryRun) {
+    console.log("🔍 [PRE-FLIGHT] Verifying GitHub labels...");
+    const requiredLabels = extractUniqueLabels(data);
+    
+    // This will halt execution if any label is missing
+    verifyLabelsOnGitHub(requiredLabels);
+    
+    console.log("✅ [PRE-FLIGHT] Environment check passed.");
+  }  
+  
+  // --- EXTRACT META,  PRINT HEADER & START PROCESS */
+  const { name: projectName, version: projectVersion, author: projectAuthor, repository: projectRepo } =
+  readPackageMeta();
   const meta: ProjectMeta = { name: projectName, version: projectVersion, author: projectAuthor, repository: projectRepo };
   printHeader(meta, fileName, absolutePath, isDryRun);
 
@@ -163,3 +125,5 @@ try {
 } catch (error: any) {
   console.error("\n❌ Critical Error:", error.message);
 }
+
+

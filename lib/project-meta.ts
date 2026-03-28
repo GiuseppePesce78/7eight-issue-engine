@@ -33,12 +33,11 @@ export function readPackageMeta(cwd: string = process.cwd()): ProjectMeta {
         : DEFAULT_PROJECT_META.author;
 
     const repository =
-      typeof json.repository === "string"
-        ? json.repository.trim() || DEFAULT_PROJECT_META.repository
-        : json.repository && typeof json.repository === "object" && json.repository.url
-        ? json.repository.url.trim()
-        : DEFAULT_PROJECT_META.repository;
-
+    typeof json.repository === "string"
+    ? json.repository.trim() || DEFAULT_PROJECT_META.repository
+    : json.repository && typeof json.repository === "object" && json.repository.url
+    ? json.repository.url.trim()
+    : DEFAULT_PROJECT_META.repository;
     return { name, version, author, repository };
   } catch {
     console.error(

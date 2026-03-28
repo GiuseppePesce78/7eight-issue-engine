@@ -1,148 +1,113 @@
 import { execSync } from "child_process";
-import fs from "fs";
-import path from "path";
+import { z } from "zod";
+import {
+  validateInput,
+  checkGitHubCLI,
+  verifyLabelsOnGitHub,
+} from "./lib/single-issue";
 
-const [title, body, assignee, ...labels] = process.argv.slice(2);
+import { readPackageMeta } from "./lib/project-meta";
+import { printDryRunBlock, printSingleIssueHeader, printSingleIssueSuccess, printTestModeBlock } from "./lib/report";
+
+interface ExecError extends Error {
+  stderr?: Buffer | string;
+}
+
+
+
+// Enforces strict rules for single issue creation
+const SingleIssueSchema = z.object({
+  title: z.string().trim().min(3, "Title too short").max(255),
+  body: z.string().trim().min(1, "Body cannot be empty"),
+  assignee: z.string().optional().transform(v => (v === "none" || !v) ? undefined : v),
+  labels: z.array(z.string()).default([]),
+});
+
+// RAW ARGUMENTS EXTRACTION
+const args = process.argv.slice(2);
+
+
+
+
+// META DATA ENVIRONMENT
 const isDryRun = process.env.DRY_RUN !== "false";
 const isTestMode = process.env.TEST_MODE === "true";
 
-// --- METADATA EXTRACTION ---
-interface PackageJson {
-  name?: string;
-  version?: string;
-  author?: string;
-  repository?: { url?: string } | string;
-}
-
-let projectName = "Unknown Project";
-let projectVersion = "0.0.0";
-let projectAuthor = "Unknown Author";
-let projectRepo = "Unknown Repo";
+// --- METADATA EXTRACTION FROM PACKAGE.JSON ---
+const meta = readPackageMeta();
 
 try {
-  const packageJson: PackageJson = JSON.parse(
-    fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8")
-  );
-  projectName = packageJson.name || projectName;
-  projectVersion = packageJson.version || projectVersion;
-  projectAuthor =
-    typeof packageJson.author === "string" ? packageJson.author : projectAuthor;
-  projectRepo =
-    typeof packageJson.repository === "object"
-      ? packageJson.repository?.url || projectRepo
-      : packageJson.repository || projectRepo;
-} catch {
-  // Silent fallback
-}
+  const validated = SingleIssueSchema.parse({
+    title: args[0],
+    body: args[1],
+    assignee: args[2],
+    labels: args.slice(3)
+  });
 
-const OWNER = "7eightDev";
 
-if (!title || !body) {
-  console.error(
-    '\n❌ Usage: npx tsx create-issue.ts "title" "body" "assignee" "label1" "label2"'
-  );
-  process.exit(1);
-}
+  printSingleIssueHeader(meta, isDryRun, isTestMode);
 
-// --- START HEADER ---
-console.log("\n" + "━".repeat(60));
-console.log(`🚀 PROJECT: ${projectName.toUpperCase()} v${projectVersion}`);
-console.log(`👤 OWNER:   ${OWNER}`);
-console.log(`✍️  AUTHOR:  ${projectAuthor}`);
-console.log(`🔗 REPO:    ${projectRepo}`);
-console.log(
-  `🎯 ACTION:  SINGLE ISSUE ${isDryRun ? "(SIMULATION)" : isTestMode ? "(TEST)" : "(REAL)"}`
-);
-console.log("━".repeat(60));
-
-// --- TEST MODE ---
-if (isTestMode) {
-  console.log("🧪 TEST MODE: Simulating issue creation...");
-  console.log(`📌 Title:  ISSUE-999: ${title}`);
-  console.log("━".repeat(60));
-  console.log("##ISSUE_NUMBER##999##");
-  process.exit(0);
-}
-
-try {
-  // --- CHECK GH CLI ---
-  try {
-    execSync("gh --version", { stdio: "ignore" });
-  } catch {
-    console.error(
-      "\n❌ [GH_CLI_NOT_FOUND] GitHub CLI (gh) is not installed or not in PATH."
-    );
-    console.error("   Install it from: https://cli.github.com");
-    process.exit(1);
+  // --- TEST MODE ---
+  if(isTestMode) {
+      printTestModeBlock(args[0])
+      process.exit(0);
   }
 
-  const labelsFlags = labels.map((l) => `--label "${l}"`).join(" ");
-  const assigneeFlag =
-    assignee && assignee !== "none" ? `--assignee "${assignee}"` : "";
-  const createCmd = `gh issue create --title "${title}" --body "${body}" ${assigneeFlag} ${labelsFlags}`;
+  checkGitHubCLI();
+  if (!isDryRun) {
+    console.log("🔍 [PRE-FLIGHT] Verifying labels compatibility...");
+    verifyLabelsOnGitHub(validated.labels);
+  }
+
+  const labelsFlags = validated.labels.map((l) => `--label "${l}"`).join(" ");
+  const assigneeFlag = validated.assignee ? `--assignee "${validated.assignee}"` : "";
+  const createCmd = `gh issue create --title "${validated.title}" --body "${validated.body}" ${assigneeFlag} ${labelsFlags}`;
+
 
   if (isDryRun) {
-    console.log("🔍 SIMULATION MODE: The following command would be executed:");
-    console.log(`\x1b[33m${createCmd}\x1b[0m`);
-    console.log("\n" + "━".repeat(60));
-    console.log("✅ Simulation successful. No issue was created.");
+    printDryRunBlock(createCmd);
     process.exit(0);
   }
 
-  // --- REAL EXECUTION ---
+  // --- EXECUTION
   console.log("⏳ Communicating with GitHub CLI...");
-
-  let rawOutput: string;
-  try {
-    rawOutput = execSync(createCmd, { encoding: "utf8" });
-  } catch (e: any) {
-    const stderr = e.stderr?.toString() || e.message || "Unknown error";
-    if (stderr.includes("Label") || stderr.includes("label")) {
-      console.error(
-        `\n❌ [INVALID_LABEL] One or more labels do not exist in the repository.`
-      );
-      console.error(`   Details: ${stderr.trim()}`);
-    } else {
-      console.error(
-        `\n❌ [ISSUE_CREATE_FAILED] Failed to create issue on GitHub.`
-      );
-      console.error(`   Details: ${stderr.trim()}`);
-    }
-    process.exit(1);
-  }
-
+  const rawOutput = execSync(createCmd, { encoding: "utf8" });  
   const newIssueUrl = rawOutput.trim();
   const issueNumber = newIssueUrl.split("/").pop();
 
   if (!issueNumber || isNaN(Number(issueNumber))) {
-    console.error(
-      `\n❌ [PARSE_FAILED] Could not extract issue number from URL: ${newIssueUrl}`
-    );
+    throw new Error(`[PARSE_FAILED] Could not extract issue number from: ${newIssueUrl}`);
+  }
+
+  // --- AUTO-RENAME (Issue Number Prefix)
+  const newTitle = `ISSUE-${issueNumber}: ${validated.title}`;
+  try {
+    execSync(`gh issue edit ${issueNumber} --title "${newTitle}"`, { stdio: "ignore" });
+  } catch (e: any) {
+    console.error(`⚠️  [RENAME_FAILED] Issue #${issueNumber} created but title rename failed: ${e.message}`);
+  }
+
+  printSingleIssueSuccess(issueNumber, newTitle)
+  
+} catch (error:unknown) {
+    if (error instanceof z.ZodError) {
+    console.error("\n❌ [VALIDATION_ERROR] Check your arguments:");
+    error.issues.forEach(e => console.error(`   - ${e.path.join(".")}: ${e.message}`));
     process.exit(1);
   }
 
-  const newTitle = `ISSUE-${issueNumber}: ${title}`;
+  if (error instanceof Error) {
+    const err = error as ExecError; // Casting sicuro dopo instanceof
+    const stderr = err.stderr?.toString().trim();
 
-  try {
-    execSync(`gh issue edit ${issueNumber} --title "${newTitle}"`, {
-      stdio: "ignore",
-    });
-  } catch (e: any) {
-    console.error(
-      `\n⚠️  [RENAME_FAILED] Issue #${issueNumber} created but title rename failed.`
-    );
-    console.error(`   Details: ${e.message}`);
-    // Non blocchiamo — l'issue è stata creata
+    console.error(`\n❌ [CRITICAL_ERROR] ${err.message}`);
+    if (stderr) {
+      console.error(`   Details: ${stderr}`);
+    }
+    process.exit(1);
   }
 
-  console.log("\n" + "━".repeat(60));
-  console.log(`🚀 ISSUE #${issueNumber} CREATED SUCCESSFULLY!`);
-  console.log(`📌 Title:  ${newTitle}`);
-  console.log("━".repeat(60));
-
-  // Output machine-readable per bulk-issues.ts
-  console.log(`##ISSUE_NUMBER##${issueNumber}##`);
-} catch (error: any) {
-  console.error("\n❌ [UNEXPECTED_ERROR]", error.message);
+  console.error("\n❌ [UNKNOWN_FATAL_ERROR] An unidentified error occurred.");
   process.exit(1);
 }
+

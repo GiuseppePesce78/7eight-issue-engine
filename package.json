@@ -6,15 +6,17 @@
   "author": "7eightDev",
   "license": "MIT",
   "scripts": {
-  "issue:run": "DRY_RUN=false npx tsx bulk-issues.ts issues-plan/issues-plan.json",
+    "issue:run": "DRY_RUN=false npx tsx bulk-issues.ts issues-plan/issues-plan.json",
     "issue:plan": "DRY_RUN=true npx tsx bulk-issues.ts issues-plan/issues-plan.json",
     "issue:single": "DRY_RUN=false npx tsx create-issue.ts"
   },
   "dependencies": {
     "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.5.0"
-  }
+  },
+  "repository": "https://github.com/7eightDev/7eight-issue-engine.git"
 }

@@ -11,6 +11,30 @@ export function validateInput(title?: string, body?: string): void {
   }
 }
 
+/**
+ * Pre-flight check: Verifies that all labels in the JSON actually exist on GitHub.
+ * @throws Error if one or more labels are missing.
+ */
+export function verifyLabelsOnGitHub(labels: string[]): void {
+  if (labels.length === 0) return;
+
+  try {
+    // Fetching existing labels in JSON format for precise matching
+    const rawOutput = execSync("gh label list --json name", { encoding: "utf8" });
+    const existingLabels = (JSON.parse(rawOutput) as { name: string }[])
+      .map(l => l.name.toLowerCase());
+
+    const missing = labels.filter(l => !existingLabels.includes(l.toLowerCase()));
+
+    if (missing.length > 0) {
+      throw new Error(`The following labels were not found on GitHub: [${missing.join(", ")}]. Please create them first.`);
+    }
+  } catch (e: any) {
+    if (e.message.includes("not found on GitHub")) throw e;
+    throw new Error(`GitHub CLI Error: Unable to fetch labels. Check your 'gh' authentication.`);
+  }
+}
+
 export function checkGitHubCLI(): void {
   try {
     execSync("gh --version", { stdio: "ignore" });

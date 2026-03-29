@@ -1,35 +1,38 @@
 [
   {
     "issue": {
-      "title": "feat(core): setup base architecture",
-      "body": "Initial project structure and configuration. Includes:\n- Folder structure\n- ESLint/Prettier setup\n- Core dependencies",
+      "title": "feat: test standard issue creation",
+      "body": "This is a simple test issue to verify the basic flow.",
       "assignee": "@me",
-      "labels": ["enhancement", "internal"]
+      "labels": ["feature"]
     },
-    "state": "pending",
-    "issueNumber": null,
-    "createdAt": null
+    "state": "pending"
   },
   {
     "issue": {
-      "title": "fix(api): solve hydration mismatch on auth",
-      "body": "Fixes the flickering issue during user session validation. Needs to check the local storage provider.",
+      "title": "bug: test multiple labels and no assignee",
+      "body": "Testing how the system handles multiple labels like 'bug' and 'priority'. Assignee is set to none.",
       "assignee": "none",
-      "labels": ["bug", "high-priority"]
+      "labels": ["bug", "priority"]
     },
-    "state": "pending",
-    "issueNumber": null,
-    "createdAt": null
+    "state": "pending"
   },
   {
     "issue": {
-      "title": "docs(readme): add installation guide",
-      "body": "Complete the README with step-by-step installation and contribution guidelines.",
+      "title": "refactor: test special characters in body () [] {}",
+      "body": "Testing shell robustness with: \n- Functions: validateInput()\n- Arrays: [item1, item2]\n- Objects: { key: 'value' }\n- Quotes: \"nested quote\"",
       "assignee": "@me",
-      "labels": ["documentation"]
+      "labels": ["refactor"]
     },
-    "state": "pending",
-    "issueNumber": null,
-    "createdAt": null
+    "state": "pending"
+  },
+  {
+    "issue": {
+      "title": "docs: test very long body content",
+      "body": "Line 1: Lorem ipsum dolor sit amet.\nLine 2: Consectetur adipiscing elit.\nLine 3: Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nLine 4: Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+      "assignee": "@me",
+      "labels": ["docs"]
+    },
+    "state": "pending"
   }
 ]

@@ -1,66 +1,197 @@
-import { execSync } from "child_process";
-import fs from "fs";
-import path from "path";
+import { execSync, spawnSync } from 'child_process';
+import { z } from 'zod';
+import { checkGitHubCLI, verifyLabelsOnGitHub } from './lib/single-issue';
 
-const [title, body, assignee, ...labels] = process.argv.slice(2);
-const isDryRun = process.env.DRY_RUN !== "false"; // Default a true se non specificato diversamente
+import { readPackageMeta } from './lib/project-meta';
+import {
+  printDryRunBlock,
+  printSingleIssueHeader,
+  printSingleIssueSuccess,
+  printTestModeBlock
+} from './lib/report';
 
-// --- METADATA EXTRACTION ---
-let projectName = "Unknown Project";
-try {
-  const packageJson = JSON.parse(
-    fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8")
-  );
-  projectName = packageJson.name || "Unknown Project";
-} catch (e) {}
-
-const OWNER = "7eightDev";
-
-if (!title || !body) {
-  console.error(
-    '\n❌ Usage: npx tsx create-issue.ts "title" "body" "assignee" "label1" "label2"'
-  );
-  process.exit(1);
+interface ExecError extends Error {
+  stderr?: Buffer | string;
 }
 
-// --- START HEADER ---
-console.log("\n" + "━".repeat(60));
-console.log(`🚀 PROJECT: ${projectName.toUpperCase()}`);
-console.log(`👤 OWNER:   ${OWNER}`);
-console.log(`🎯 ACTION:  SINGLE ISSUE ${isDryRun ? "(SIMULATION)" : "(REAL)"}`);
-console.log("━".repeat(60));
+/* =============================================
+   Zod Schema Definition: Enforce strict rules
+   for creating a single GitHub issue
+   - title: required, trimmed, 3-255 chars
+   - body: required, trimmed, non-empty
+   - assignee: optional, transform "none" or empty to undefined
+   - labels: optional string array, defaults to []
+============================================= */
+const SingleIssueSchema = z.object({
+  title: z.string().trim().min(3, 'Title too short').max(255),
+  body: z.string().trim().min(1, 'Body cannot be empty'),
+  assignee: z
+    .string()
+    .optional()
+    .transform((v) => (v === 'none' || !v ? undefined : v)),
+  labels: z.array(z.string()).default([])
+});
+
+/* ===============================
+   RAW CLI ARGUMENT EXTRACTION
+   - Extract arguments: [title, body, assignee, labels]
+================================ */
+const args = process.argv.slice(2);
+
+/* ===============================
+   ENVIRONMENT FLAGS
+   - DRY_RUN: skip execution, just print commands
+   - TEST_MODE: simulate execution, exit early
+================================ */
+const isDryRun = process.env.DRY_RUN !== 'false';
+const isTestMode = process.env.TEST_MODE === 'true';
+
+/* ===============================
+   PROJECT METADATA
+   - Extract info from package.json
+================================ */
+const meta = readPackageMeta();
 
 try {
-  const labelsFlags = labels.map((l) => `--label "${l}"`).join(" ");
-  const assigneeFlag =
-    assignee && assignee !== "none" ? `--assignee "${assignee}"` : "";
-  const createCmd = `gh issue create --title "${title}" --body "${body}" ${assigneeFlag} ${labelsFlags}`;
+  /* ===============================
+     VALIDATE INPUT WITH ZOD
+  ================================= */
+  const validated = SingleIssueSchema.parse({
+    title: args[0],
+    body: args[1],
+    assignee: args[2] || undefined,
+    labels: args[3] ? JSON.parse(args[3]) : []
+  });
 
-  if (isDryRun) {
-    console.log("🔍 SIMULATION MODE: The following command would be executed:");
-    console.log(`\x1b[33m${createCmd}\x1b[0m`);
-    console.log("\n" + "━".repeat(60));
-    console.log("✅ Simulation successful. No issue was created.");
+  /* ===============================
+     PRINT HEADER
+     - Display project & environment info
+  ================================= */
+  printSingleIssueHeader(meta, isDryRun, isTestMode);
+
+  /* ===============================
+     TEST MODE BLOCK
+     - Print test info and exit if TEST_MODE
+  ================================= */
+  if (isTestMode) {
+    printTestModeBlock(args[0]);
     process.exit(0);
   }
 
-  // --- REAL EXECUTION ---
-  console.log("⏳ Communicating with GitHub CLI...");
-  const rawOutput = execSync(createCmd, { encoding: "utf8" });
-  const newIssueUrl = rawOutput.trim();
-  const issueNumber = newIssueUrl.split("/").pop();
+  /* ===============================
+     PRE-FLIGHT CHECKS
+     - Ensure GitHub CLI is installed & authenticated
+     - Verify all labels exist on GitHub
+  ================================= */
+  checkGitHubCLI();
+  if (!isDryRun) {
+    console.log('🔍 [PRE-FLIGHT] Verifying labels compatibility...');
+    verifyLabelsOnGitHub(validated.labels);
+  }
 
-  const newTitle = `ISSUE-${issueNumber}: ${title}`;
-  execSync(`gh issue edit ${issueNumber} --title "${newTitle}"`);
+  /* ===============================
+     BUILD GITHUB CLI COMMAND (DRY RUN ONLY)
+     - Builds a preview command string for display purposes
+     - Not used for actual execution (see EXECUTE COMMAND below)
+  ================================= */
+  const labelsFlags = validated.labels.map((l) => `--label "${l}"`).join(' ');
+  const assigneeFlag = validated.assignee
+    ? `--assignee "${validated.assignee}"`
+    : '';
+  const createCmd = `gh issue create --title "${validated.title}" --body "${validated.body}" ${assigneeFlag} ${labelsFlags}`;
 
-  console.log("\n" + "━".repeat(60));
-  console.log(`🚀 ISSUE #${issueNumber} CREATED SUCCESSFULLY!`);
-  console.log(`📌 Title:  ${newTitle}`);
-  console.log("━".repeat(60));
+  /* ===============================
+     DRY RUN BLOCK
+     - Print command and exit if DRY_RUN
+  ================================= */
+  if (isDryRun) {
+    printDryRunBlock(createCmd);
+    process.exit(0);
+  }
 
-  console.log(`ISSUE #${issueNumber}`);
-} catch (error: any) {
-  console.error("\n❌ Error during execution:");
-  console.error(error.message);
+  /* ===============================
+     EXECUTE COMMAND
+     - Runs GitHub CLI via spawnSync (array args, no shell interpolation)
+     - Avoids shell injection risks from special characters in title/body
+     - Extracts issue number from returned URL via regex
+  ================================= */
+  console.log('⏳ Communicating with GitHub CLI...');
+  const result = spawnSync(
+    'gh',
+    [
+      'issue',
+      'create',
+      '--title',
+      validated.title,
+      '--body',
+      validated.body,
+      ...(validated.assignee ? ['--assignee', validated.assignee] : []),
+      ...validated.labels.flatMap((l) => ['--label', l])
+    ],
+    { encoding: 'utf8' }
+  );
+
+  if (result.status !== 0) {
+    throw new Error(result.stderr || 'gh issue create failed');
+  }
+
+  const newIssueUrl = result.stdout.trim();
+  const match = newIssueUrl.match(/\/issues\/(\d+)$/);
+  const issueNumber = match?.[1];
+
+  if (!issueNumber || isNaN(Number(issueNumber))) {
+    throw new Error(
+      `[PARSE_FAILED] Could not extract issue number from: ${newIssueUrl}`
+    );
+  }
+
+  /* ===============================
+     AUTO-RENAME ISSUE TITLE
+     - Prefix title with ISSUE-<number>
+     - Failures logged but do not block execution
+  ================================= */
+  const newTitle = `ISSUE-${issueNumber}: ${validated.title}`;
+  try {
+    execSync(`gh issue edit ${issueNumber} --title "${newTitle}"`, {
+      stdio: 'ignore'
+    });
+  } catch (e: any) {
+    console.error(
+      `⚠️  [RENAME_FAILED] Issue #${issueNumber} created but title rename failed: ${e.message}`
+    );
+  }
+
+  /* ===============================
+     SUCCESS OUTPUT
+  ================================= */
+  printSingleIssueSuccess(issueNumber, newTitle);
+
+  /* ===============================
+     ERROR HANDLING
+     - Zod validation errors
+     - GitHub CLI execution errors
+     - Unknown fatal errors
+  ================================= */
+} catch (error: unknown) {
+  if (error instanceof z.ZodError) {
+    console.error('\n❌ [VALIDATION_ERROR] Check your arguments:');
+    error.issues.forEach((e) =>
+      console.error(`   - ${e.path.join('.')}: ${e.message}`)
+    );
+    process.exit(1);
+  }
+
+  if (error instanceof Error) {
+    const err = error as ExecError; // Safe cast after instanceof
+    const stderr = err.stderr?.toString().trim();
+
+    console.error(`\n❌ [CRITICAL_ERROR] ${err.message}`);
+    if (stderr) {
+      console.error(`   Details: ${stderr}`);
+    }
+    process.exit(1);
+  }
+
+  console.error('\n❌ [UNKNOWN_FATAL_ERROR] An unidentified error occurred.');
   process.exit(1);
 }

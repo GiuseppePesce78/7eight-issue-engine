@@ -8,7 +8,10 @@
   "scripts": {
     "issue:run": "DRY_RUN=false npx tsx bulk-issues.ts issues-plan/issues-plan.json",
     "issue:plan": "DRY_RUN=true npx tsx bulk-issues.ts issues-plan/issues-plan.json",
-    "issue:single": "DRY_RUN=false npx tsx create-issue.ts"
+    "issue:single": "DRY_RUN=false npx tsx create-issue.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "tsx": "^4.0.0",
@@ -16,7 +19,16 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0"
+    "@types/jest": "^29.0.0",
+    "@types/node": "^25.5.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.test.ts"],
+    "moduleFileExtensions": ["ts", "js"]
   },
   "repository": "https://github.com/7eightDev/7eight-issue-engine.git"
 }

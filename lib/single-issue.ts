@@ -17,7 +17,8 @@ export function validateInput(title?: string, body?: string): void {
 /* =============================================
    PRE-FLIGHT LABEL CHECK
    - Verifies that all labels exist in the GitHub repository
-   - Throws error if any labels are missing
+   - Throws error if any labels are missing, printing the exact
+     gh commands needed to create them
 ============================================= */
 export function verifyLabelsOnGitHub(labels: string[]): void {
   if (labels.length === 0) return;
@@ -37,12 +38,15 @@ export function verifyLabelsOnGitHub(labels: string[]): void {
     );
 
     if (missing.length > 0) {
-      throw new Error(
-        `The following labels [${missing.join(', ')}] were not found on GitHub. Please create them first.`
-      );
+      console.error(`\n❌ [PRE-FLIGHT] Missing labels on GitHub:`);
+      missing.forEach((label) => {
+        console.error(`   gh label create "${label}" --color "f0f0f0"`);
+      });
+      console.error(`\nCreate them and re-run.`);
+      throw new Error(`Missing labels: ${missing.join(', ')}`);
     }
   } catch (e: any) {
-    if (e.message.includes('not found on GitHub')) throw e;
+    if (e.message.startsWith('Missing labels:')) throw e;
     throw new Error(
       `GitHub CLI Error: Unable to fetch labels. Check your 'gh' authentication.`
     );

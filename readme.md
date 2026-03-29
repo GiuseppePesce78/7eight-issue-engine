@@ -1,208 +1,140 @@
-# 🛠️ GitHub Issue Automation Suite
+# 🛠️ 7eight-issue-engine
 
 <p align="center">
   <img src="https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white" />
   <img src="https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white" />
   <img src="https://img.shields.io/badge/GitHub%20CLI-24292e?style=for-the-badge&logo=github&logoColor=white" />
+  <img src="https://img.shields.io/badge/zod-3E67B1?style=for-the-badge&logo=zod&logoColor=white" />
+  <img src="https://img.shields.io/badge/jest-C21325?style=for-the-badge&logo=jest&logoColor=white" />
   <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge" />
 </p>
 
-> **Transform your JSON backlog into GitHub reality with one command.**
+> **Transform your JSON backlog into GitHub reality with one command — safely, atomically, and with full traceability.**
 
-**7eight-issue-engine** is a lightweight, TypeScript-powered automation tool designed to bridge the gap between project planning and execution. Stop creating issues manually; define your sprint in a JSON file and let the engine handle the rest.
+Stop creating GitHub issues by hand. Define your entire sprint in a JSON file, validate it with a dry run, then execute. The engine handles label verification, issue creation, auto-renaming, and real-time state persistence — without ever touching GitHub unless you explicitly tell it to.
 
-## 🚀 Features
+---
 
-- **Bulk Issue Creation**: Process JSON files to create multiple GitHub issues at once.
-- **Single Issue Creation**: CLI command for individual issues.
-- **Dry Run Mode**: Simulate without making changes.
-- **State Tracking**: Automatic status updates in JSON (pending, created, failed).
-- **Modular Architecture**: Clean, testable code with separated concerns.
-- **Type Safety**: Full TypeScript support with strong typing.
+## ✨ Features
 
-## 📁 Project Structure
+- **Bulk Issue Creation** — process a JSON plan and create dozens of issues in one command
+- **Single Issue CLI** — create individual issues from the terminal with full validation
+- **Dry Run Mode** — simulate every run before execution, zero risk
+- **Atomic JSON Persistence** — state saved after each issue, safe to interrupt and resume
+- **Label Pre-flight Check** — verifies labels exist before touching GitHub, prints exact fix commands if missing
+- **Auto-renaming** — issues are automatically prefixed with `ISSUE-{N}:` after creation
+- **Full Test Suite** — Jest + ts-jest coverage across all core modules
+- **Type Safe** — strict TypeScript + Zod validation on all data inputs
 
-```
-7eight-issue-engine/
-├── bulk-issues.ts          # Main CLI entry for bulk processing
-├── create-issue.ts         # Single issue creation script
-├── lib/
-│   ├── bulk-data.ts        # JSON load/save utilities
-│   ├── cmd-utils.ts        # Command building utilities
-│   ├── project-meta.ts     # Project metadata extraction
-│   └── report.ts           # Logging and reporting functions
-├── types/
-│   └── types.ts            # TypeScript type definitions
-├── docs/
-│   ├── bulk-issue.md       # Bulk processing documentation
-│   └── create-issue.md     # Single issue documentation
-└── package.json
-```
+---
 
-## ⚙️ Requirements
-
-- Node.js (v16+)
-- GitHub CLI (`gh`) installed and authenticated
-- TypeScript runtime via `tsx`
-
-Install GitHub CLI:
-```bash
-# macOS
-brew install gh
-
-# Or download from https://cli.github.com/
-gh auth login
-```
-
-## 📦 Installation
+## 🚀 Quick Start
 
 ```bash
+# 1. Install dependencies
 npm install
+
+# 2. Authenticate GitHub CLI
+gh auth login
+
+# 3. Define your issues
+vim issues-plan/issues-plan.json
+
+# 4. Dry run — validate without touching GitHub
+npm run issue:plan
+
+# 5. Execute — create real issues
+npm run issue:run
 ```
 
-## 🧠 How It Works
+---
 
-### Architecture Overview
-
-The tool is built with a modular architecture:
-
-- **Data Layer** (`lib/bulk-data.ts`): Handles JSON file operations with validation.
-- **Command Layer** (`lib/cmd-utils.ts`): Safely builds CLI commands.
-- **Metadata Layer** (`lib/project-meta.ts`): Extracts project info from `package.json`.
-- **Reporting Layer** (`lib/report.ts`): Manages console output and summaries.
-- **Types** (`types/types.ts`): Shared TypeScript interfaces.
-
-### Bulk Issue Creator
-
-**File**: `bulk-issues.ts`
-
-Reads a JSON file, validates entries, and creates GitHub issues while tracking progress.
-
-### Single Issue Creator
-
-**File**: `create-issue.ts`
-
-Creates individual issues via CLI with labels, assignee, and automatic naming.
-
-## 🧪 Execution Modes
-
-### 🔍 DRY RUN (Simulation)
-
-No issues are created. Shows what would happen.
-
-```bash
-npm run issue:plan <file.json>
-# or
-DRY_RUN=true npx tsx bulk-issues.ts <file.json>
-```
-
-### 🚀 EXECUTION (Real Run)
-
-Actually creates issues on GitHub.
-
-```bash
-npm run issue:run <file.json>
-# or
-DRY_RUN=false npx tsx bulk-issues.ts <file.json>
-```
-
-### 🎯 Single Issue
-
-```bash
-npm run issue:single -- "Title" "Description" "assignee" "label1" "label2"
-```
-
-## 🗂️ JSON File Structure
-
-Example `issues.json`:
+## 📋 JSON Plan Format
 
 ```json
 [
   {
     "state": "pending",
     "issue": {
-      "title": "Setup authentication",
-      "body": "Implement Clerk authentication",
-      "assignee": "username",
+      "title": "Setup authentication module",
+      "body": "Implement Clerk-based authentication with session management.",
+      "assignee": "octocat",
       "labels": ["auth", "backend"]
     }
   }
 ]
 ```
 
-## 🔁 Supported States
-
-| State    | Description |
-|----------|-------------|
-| pending  | Issue to be created |
-| created  | Successfully created |
-| failed   | Creation failed (with error details) |
-| test     | Test mode entry |
-
-## 🧾 CLI Output
-
-During execution:
-
-- Project metadata header
-- Progress indicators: `[PENDING]`, `[CREATING...]`, `[SKIPPED]`, `[FAILED]`
-- Final summary with counts
-
-## 🧩 Automatic Naming
-
-Created issues are renamed to: `ISSUE-<number>: <original title>`
-
-## 🔐 Configuration
-
-Ensure:
-
-1. GitHub CLI is authenticated: `gh auth status`
-2. You're in a GitHub repository
-3. You have issue creation permissions
-
-## 📁 Available Scripts
+After execution, the file is updated automatically:
 
 ```json
 {
-  "scripts": {
-    "issue:run": "DRY_RUN=false npx tsx bulk-issues.ts",
-    "issue:plan": "DRY_RUN=true npx tsx bulk-issues.ts",
-    "issue:single": "DRY_RUN=false npx tsx create-issue.ts"
+  "state": "created",
+  "issueNumber": "42",
+  "createdAt": "2026-03-29T10:15:30.000Z",
+  "issue": {
+    "title": "ISSUE-42: Setup authentication module",
+    ...
   }
 }
 ```
 
-## 🧭 Recommended Workflow
+---
 
-1. Define issues in JSON
-2. Dry run: `npm run issue:plan issues.json`
-3. Review output
-4. Execute: `npm run issue:run issues.json`
+## 🧭 Commands
 
-## 🛠️ Tech Stack
+| Command | Description |
+|---|---|
+| `npm run issue:plan` | Dry run — validate and preview |
+| `npm run issue:run` | Execute — create real issues |
+| `npm run issue:single -- "Title" "Body" "assignee" '["label"]'` | Create a single issue |
+| `npm test` | Run the test suite |
+| `npm run test:coverage` | Run tests with coverage report |
 
-- **TypeScript**: Type safety and modern JS
-- **Node.js**: Runtime
-- **GitHub CLI**: Issue creation
-- **Modular Design**: Separated concerns for maintainability
+---
+
+## ⚙️ Requirements
+
+- Node.js v18+
+- GitHub CLI (`gh`) — [cli.github.com](https://cli.github.com)
+- `gh auth login` completed
+
+---
+
+## 📁 Project Structure
+
+```
+7eight-issue-engine/
+├── bulk-issues.ts        # Orchestrator: bulk processing entry point
+├── bulk-processor.ts     # Iteration engine and state management
+├── create-issue.ts       # Executor: single issue creation
+├── lib/
+│   ├── bulk-data.ts      # Zod validation and JSON I/O
+│   ├── cmd-utils.ts      # CLI argument construction
+│   ├── project-meta.ts   # package.json metadata reader
+│   ├── report.ts         # Console output and formatting
+│   └── single-issue.ts   # GitHub CLI wrappers
+├── types/
+│   └── types.ts          # Shared TypeScript interfaces
+├── __tests__/            # Jest test suite
+├── issues-plan/          # Your JSON issue plans (gitignored)
+└── docs/                 # Technical documentation
+```
+
+---
+
+## 📖 Documentation
+
+- [Architecture & Data Flow](./docs/architecture.md)
+- [JSON Schema Reference](./docs/schema.md)
+- [Testing Guide](./docs/testing.md)
+
+---
 
 ## 📄 License
 
-MIT
+MIT © 2026 [7eightDev](https://github.com/7eightDev)
 
-## 👨‍💻 Author
-
-7eightDev
-
-## 💡 Philosophy
-
-Built to remove manual repetition, standardize backlogs, and bridge planning to execution.
-
-## 🚀 Future Ideas
-
-- Multi-repository support
-- Bidirectional GitHub sync
-- Web UI dashboard
-- Advanced templates
-- CI/CD integration
+---
 
 **Build fast. Track better. Scale clean.**

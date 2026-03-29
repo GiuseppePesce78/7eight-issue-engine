@@ -1,38 +1,36 @@
 [
   {
+    "state": "test",
     "issue": {
-      "title": "feat: test standard issue creation",
-      "body": "This is a simple test issue to verify the basic flow.",
+      "title": "test: verify basic issue creation flow",
+      "body": "This is a mock issue to verify the basic creation flow in TEST_MODE. No real issue will be created on GitHub.",
       "assignee": "@me",
-      "labels": ["feature"]
-    },
-    "state": "pending"
+      "labels": [
+        "bug"
+      ]
+    }
   },
   {
+    "state": "test",
     "issue": {
-      "title": "bug: test multiple labels and no assignee",
-      "body": "Testing how the system handles multiple labels like 'bug' and 'priority'. Assignee is set to none.",
+      "title": "test: verify multiple labels handling",
+      "body": "This is a mock issue to verify that multiple labels are passed correctly in TEST_MODE.",
       "assignee": "none",
-      "labels": ["bug", "priority"]
-    },
-    "state": "pending"
+      "labels": [
+        "bug",
+        "feature"
+      ]
+    }
   },
   {
+    "state": "test",
     "issue": {
-      "title": "refactor: test special characters in body () [] {}",
-      "body": "Testing shell robustness with: \n- Functions: validateInput()\n- Arrays: [item1, item2]\n- Objects: { key: 'value' }\n- Quotes: \"nested quote\"",
+      "title": "test: verify special characters in body",
+      "body": "Testing shell robustness with special characters: backticks \\`code\\`, double quotes \\\"value\\\", brackets [item], braces {key: value}.",
       "assignee": "@me",
-      "labels": ["refactor"]
-    },
-    "state": "pending"
-  },
-  {
-    "issue": {
-      "title": "docs: test very long body content",
-      "body": "Line 1: Lorem ipsum dolor sit amet.\nLine 2: Consectetur adipiscing elit.\nLine 3: Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nLine 4: Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
-      "assignee": "@me",
-      "labels": ["docs"]
-    },
-    "state": "pending"
+      "labels": [
+        "bug"
+      ]
+    }
   }
 ]

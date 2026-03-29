@@ -55,7 +55,7 @@ export function printSummary(projectName: string, stats: { created: number; skip
     if (stats.created > 0) {
       console.log("\n🎉 All issues created successfully!");
     } else if (stats.skipped === stats.total) {
-      console.log("\n💡 All issues already created.");
+      console.log("\n💡 All issues already created or in test state.");
     }
   }
 

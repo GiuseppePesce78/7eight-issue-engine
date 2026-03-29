@@ -22,7 +22,7 @@ export function processEntry(
 ): boolean {
 
    // 1. Skip if the entry is already marked as created
-  if (entry.state === 'created') {
+  if (entry.state === 'created' || entry.state === 'test' ) {
     console.log(`\x1b[90m[SKIPPED]\x1b[0m ${entry.issue.title}`);
     return false;
   }

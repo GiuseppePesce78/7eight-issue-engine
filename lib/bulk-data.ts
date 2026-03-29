@@ -28,7 +28,7 @@ export function saveBulkData(pathToJson: string, data: BulkEntry[]): void {
    - StateEnum limita lo stato a created/pending/failed
    - BulkEntrySchema garantisce title/body/labels corretti
 ============================================= */
-const StateEnum = z.enum(['created', 'pending', 'failed']);
+const StateEnum = z.enum(['created', 'pending', 'failed', 'test']);
 
 const BulkEntrySchema = z
   .object({

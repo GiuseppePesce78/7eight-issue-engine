@@ -1,13 +1,18 @@
 import { ProjectMeta } from "../types/types";
 
+/* =============================================
+   BULK ISSUE REPORTS
+   - Functions to display decorative headers and summaries
+   - Supports Dry Run and Real execution modes
+============================================= */
+
 /**
  * Prints a professional decorative header for bulk issue operations.
- * It displays project metadata, source file information, and the current execution mode.
- * * @param {ProjectMeta} meta - Object containing project metadata (name, author, repository).
- * @param {string} fileName - The name of the JSON file being processed.
- * @param {string} absolutePath - The full system path to the source file.
- * @param {boolean} isDryRun - Flag to indicate if the execution is a simulation or real.
- * @returns {void}
+ * Shows project metadata, source file info, and execution mode.
+ * @param meta - Project metadata (name, author, repository)
+ * @param fileName - Name of the JSON source file
+ * @param absolutePath - Full system path to the source file
+ * @param isDryRun - True if execution is a simulation
  */
 export function printHeader(meta: ProjectMeta, fileName: string, absolutePath: string, isDryRun: boolean): void {
   console.log("\n" + "━".repeat(65));
@@ -27,14 +32,10 @@ export function printHeader(meta: ProjectMeta, fileName: string, absolutePath: s
 
 /**
  * Prints a final execution summary for bulk issue operations.
- * Shows statistics for created, skipped, and total issues, with different layouts for Dry Run and Real modes.
- * * @param {string} projectName - The name of the project being processed.
- * @param {Object} stats - An object containing the execution statistics.
- * @param {number} stats.created - The number of issues successfully created on GitHub.
- * @param {number} stats.skipped - The number of issues skipped (e.g., already existing).
- * @param {number} stats.total - The total number of issues defined in the plan.
- * @param {boolean} isDryRun - Flag to indicate if the summary refers to a simulation.
- * @returns {void}
+ * Provides statistics for created, skipped, and total issues.
+ * @param projectName - Name of the project being processed
+ * @param stats - Object containing statistics (created, skipped, total)
+ * @param isDryRun - True if this is a simulation
  */
 export function printSummary(projectName: string, stats: { created: number; skipped: number; total: number }, isDryRun: boolean): void {
   console.log("\n" + "━".repeat(65));
@@ -61,13 +62,16 @@ export function printSummary(projectName: string, stats: { created: number; skip
   console.log("━".repeat(65) + "\n");
 }
 
+/* =============================================
+   SINGLE ISSUE REPORTS
+============================================= */
+
 /**
- * @function printSingleIssueHeader
- * @description Prints a professional decorative header for single issue operations.
- * * @param {ProjectMeta} projectMeta - Object containing project name, version, author, and repository.
- * @param {boolean} isDryRun - Flag to indicate if the current execution is a simulation.
- * @param {boolean} isTestMode - Flag to indicate if the script is running in automated test mode.
- * @returns {void}
+ * Prints a decorative header for single issue operations.
+ * Indicates if Dry Run or Test Mode is active.
+ * @param meta - Project metadata
+ * @param isDryRun - True if simulation mode
+ * @param isTestMode - True if automated test mode
  */
 export function printSingleIssueHeader(
   meta: ProjectMeta, 
@@ -85,11 +89,10 @@ export function printSingleIssueHeader(
 }
 
 /**
- * @function printSingleIssueSuccess
- * @description Prints a visual success report and a machine-readable tag after a GitHub issue is created.
- * * @param {string} issueNumber - The unique identifier assigned by GitHub to the new issue.
- * @param {string} title - The final prefixed title of the created issue (e.g., 'ISSUE-123: title').
- * @returns {void}
+ * Prints a success report for a single GitHub issue creation.
+ * Includes machine-readable tag for further automation.
+ * @param issueNumber - GitHub-assigned issue number
+ * @param title - Final prefixed title of the created issue
  */
 export function printSingleIssueSuccess(issueNumber: string, title: string): void {
   console.log("\n" + "━".repeat(60));

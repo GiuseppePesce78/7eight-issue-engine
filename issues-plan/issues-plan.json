@@ -20,7 +20,7 @@
   {
     "issue": {
       "title": "refactor: test special characters in body () [] {}",
-      "body": "Testing shell robustness with: \n- Functions: validateInput()\n Arrays: [item1, item2]\n Objects: { key: 'value' }\n Quotes: \"nested quote\"",
+      "body": "Testing shell robustness with: \n- Functions: validateInput()\n- Arrays: [item1, item2]\n- Objects: { key: 'value' }\n- Quotes: \"nested quote\"",
       "assignee": "@me",
       "labels": ["refactor"]
     },
@@ -32,6 +32,7 @@
       "body": "Line 1: Lorem ipsum dolor sit amet.\nLine 2: Consectetur adipiscing elit.\nLine 3: Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nLine 4: Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
       "assignee": "@me",
       "labels": ["docs"]
-    }
+    },
+    "state": "pending"
   }
 ]

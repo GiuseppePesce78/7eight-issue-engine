@@ -186,6 +186,8 @@ function sanitizeForShell(text: string): string {
  * Creates missing labels automatically with default gray color.
  * @param labels - Array of label strings to check.
  * @param repo - GitHub repository in format "owner/repo".
+ * @remarks Currently unused. Reserved for future use as an alternative
+ * to verifyLabelsOnGitHub() when auto-creation of missing labels is desired.
  */
 export function ensureLabelsExist(labels: string[], repo: string) {
   const result = spawnSync('gh', ['label', 'list', '--repo', repo], {

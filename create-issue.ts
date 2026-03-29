@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execSync, spawnSync } from 'child_process';
 import { z } from 'zod';
 import { checkGitHubCLI, verifyLabelsOnGitHub } from './lib/single-issue';
 
@@ -90,9 +90,9 @@ try {
   }
 
   /* ===============================
-     BUILD GITHUB CLI COMMAND
-     - Convert labels array to --label flags
-     - Add optional --assignee flag
+     BUILD GITHUB CLI COMMAND (DRY RUN ONLY)
+     - Builds a preview command string for display purposes
+     - Not used for actual execution (see EXECUTE COMMAND below)
   ================================= */
   const labelsFlags = validated.labels.map((l) => `--label "${l}"`).join(' ');
   const assigneeFlag = validated.assignee
@@ -111,13 +111,33 @@ try {
 
   /* ===============================
      EXECUTE COMMAND
-     - Run GitHub CLI
-     - Extract issue number from returned URL
+     - Runs GitHub CLI via spawnSync (array args, no shell interpolation)
+     - Avoids shell injection risks from special characters in title/body
+     - Extracts issue number from returned URL via regex
   ================================= */
   console.log('⏳ Communicating with GitHub CLI...');
-  const rawOutput = execSync(createCmd, { encoding: 'utf8' });
-  const newIssueUrl = rawOutput.trim();
-  const issueNumber = newIssueUrl.split('/').pop();
+  const result = spawnSync(
+    'gh',
+    [
+      'issue',
+      'create',
+      '--title',
+      validated.title,
+      '--body',
+      validated.body,
+      ...(validated.assignee ? ['--assignee', validated.assignee] : []),
+      ...validated.labels.flatMap((l) => ['--label', l])
+    ],
+    { encoding: 'utf8' }
+  );
+
+  if (result.status !== 0) {
+    throw new Error(result.stderr || 'gh issue create failed');
+  }
+
+  const newIssueUrl = result.stdout.trim();
+  const match = newIssueUrl.match(/\/issues\/(\d+)$/);
+  const issueNumber = match?.[1];
 
   if (!issueNumber || isNaN(Number(issueNumber))) {
     throw new Error(

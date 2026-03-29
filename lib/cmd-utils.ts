@@ -1,4 +1,4 @@
-import { Issue } from "../types/types";
+import { Issue } from '../types/types';
 
 /**
  * Converts a single Issue object into a CLI-safe array of arguments
@@ -13,14 +13,11 @@ import { Issue } from "../types/types";
  * @returns string[] - Array of CLI arguments
  */
 export function buildCommandArgs(issue: Issue): string[] {
-  // DEBUG: log the raw issue object to verify contents
-  console.log(`ISSUES: ${JSON.stringify(issue)}`)
-
   return [
-    issue.title,// Required: issue title
-    issue.body,// Required: issue body
+    issue.title, // Required: issue title
+    issue.body, // Required: issue body
     // Optional: assignee if defined and not "none", otherwise empty string
-    issue.assignee && issue.assignee !== "none" ? issue.assignee : "",
+    issue.assignee && issue.assignee !== 'none' ? issue.assignee : '',
     // Optional: labels array is JSON-stringified to preserve multiple labels
     JSON.stringify(issue.labels ?? [])
   ];
@@ -38,7 +35,7 @@ export function buildGitHubCommand(issue: Issue): Issue {
   const args = buildCommandArgs(issue);
 
   // Join arguments into a single command string (safe only for logging/debugging)
-  const command = `npx tsx create-issue.ts ${args.join(" ")}`;
+  const command = `npx tsx create-issue.ts ${args.join(' ')}`;
 
   // Return a new Issue object including the generated command string
   return {

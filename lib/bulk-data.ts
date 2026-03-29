@@ -161,6 +161,7 @@ export function extractUniqueLabels(data: BulkEntry[]): string[] {
  * Escapes special characters in text to prevent shell interpretation errors.
  * - Doubles backslashes
  * - Escapes double quotes
+ * - Escapes backticks (prevents command substitution)
  * - Trims whitespace
  * @param text - Raw string input
  * @returns Sanitized, shell-safe string
@@ -169,7 +170,8 @@ function sanitizeForShell(text: string): string {
   if (!text) return '';
   return text
     .replace(/\\/g, '\\\\') 
-    .replace(/"/g, '\\"') 
+    .replace(/"/g, '\\"')
+    .replace(/`/g, '\\`')
     .trim();
 }
 
